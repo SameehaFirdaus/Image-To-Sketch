@@ -1,19 +1,22 @@
 import streamlit as st
-import cv2
+from PIL import Image, ImageFilter
 import numpy as np
-from PIL import Image
 import io
 
 # Function to convert image to sketch
 def convert_to_sketch(image):
     # Convert to grayscale
-    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    gray_image = image.convert("L")
+    
     # Invert the grayscale image
-    inverted_image = 255 - gray_image
+    inverted_image = Image.eval(gray_image, lambda x: 255 - x)
+    
     # Apply Gaussian blur
-    blurred_image = cv2.GaussianBlur(inverted_image, (21, 21), 0)
-    # Create the sketch
-    sketch_image = cv2.divide(gray_image, 255 - blurred_image, scale=256)
+    blurred_image = inverted_image.filter(ImageFilter.GaussianBlur(radius=21))
+    
+    # Create the sketch by dividing the grayscale image by the blurred inverted image
+    sketch_image = Image.blend(gray_image, blurred_image, alpha=0.5)
+    
     return sketch_image
 
 # Streamlit app
@@ -28,21 +31,15 @@ if uploaded_file is not None:
     image = Image.open(uploaded_file)
     st.image(image, caption='Uploaded Image', use_column_width=True)
 
-    # Convert the image to a format suitable for OpenCV
-    image_array = np.array(image)
-    
     # Convert to sketch
-    sketch_image = convert_to_sketch(image_array)
+    sketch_image = convert_to_sketch(image)
 
     # Display the sketch
     st.image(sketch_image, caption='Sketch Image', use_column_width=True)
 
     # Convert sketch image to PIL format for download
-    sketch_pil = Image.fromarray(sketch_image)
-
-    # Create a download button
     buf = io.BytesIO()
-    sketch_pil.save(buf, format="PNG")
+    sketch_image.save(buf, format="PNG")
     buf.seek(0)
 
     st.download_button(
