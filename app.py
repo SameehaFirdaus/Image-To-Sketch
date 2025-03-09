@@ -14,7 +14,7 @@ def convert_to_sketch(image):
     # Apply Gaussian blur
     blurred_image = inverted_image.filter(ImageFilter.GaussianBlur(radius=21))
     
-    # Create the sketch by dividing the grayscale image by the blurred inverted image
+    # Create the sketch by blending the grayscale image with the blurred inverted image
     sketch_image = Image.blend(gray_image, blurred_image, alpha=0.5)
     
     return sketch_image
@@ -29,13 +29,13 @@ uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "png", "jpeg
 if uploaded_file is not None:
     # Open the uploaded image
     image = Image.open(uploaded_file)
-    st.image(image, caption='Uploaded Image', use_column_width=True)
+    st.image(image, caption='Uploaded Image', use_container_width=True)
 
     # Convert to sketch
     sketch_image = convert_to_sketch(image)
 
     # Display the sketch
-    st.image(sketch_image, caption='Sketch Image', use_column_width=True)
+    st.image(sketch_image, caption='Sketch Image', use_container_width=True)
 
     # Convert sketch image to PIL format for download
     buf = io.BytesIO()
